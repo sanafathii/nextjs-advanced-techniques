@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+@layer base {
+  /* .skeleton {
+    @apply !bg-gray-200 !text-gray-200  rounded-md !animate-pulse;
+  } */
+  .skeleton *:not(:has(*)) {
+    @apply !bg-gray-200 !text-gray-200  rounded-md !animate-pulse;
+  }
+
+  .skeleton img {
+    @apply relative;
+  }
+
+  .skeleton img::before {
+    content: "logo";
+    @apply absolute inset-0 bg-gray-200  flex justify-center items-center text-black;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #ffffff;
+  color: #111111;
+}
