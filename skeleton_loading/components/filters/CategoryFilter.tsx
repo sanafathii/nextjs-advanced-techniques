@@ -4,36 +4,38 @@ import { Category } from "../types/product";
 
 interface CategoryFilterProps {
   categories: Category[];
-  selectedCategories: number[];
-  onChange: (id: number) => void;
+  selectedCategories: string[];
+  onChange: (slug: string) => void;
+  isSkeleton?: boolean;
 }
 
 export default function CategoryFilter({
   categories,
   selectedCategories,
   onChange,
+  isSkeleton = false,
 }: CategoryFilterProps) {
   return (
-    <div>
+    <div className={isSkeleton ? "skeleton" : ""}>
       <h3 className="mb-4 text-base font-semibold">دسته‌بندی</h3>
 
       <div className="space-y-3">
         {categories.map((category) => (
           <label
-            key={category.id}
-            className="flex cursor-pointer items-center justify-between text-sm"
+            key={category.slug}
+            className="flex cursor-pointer items-center text-sm"
           >
             <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={selectedCategories.includes(category.id)}
-                onChange={() => onChange(category.id)}
-              />
+              {!isSkeleton && (
+                <input
+                  type="checkbox"
+                  checked={selectedCategories.includes(category.slug)}
+                  onChange={() => onChange(category.slug)}
+                />
+              )}
 
               <span>{category.name}</span>
             </div>
-
-            <span className="text-gray-400">{category.productCount}</span>
           </label>
         ))}
       </div>

@@ -3,72 +3,85 @@ import { Product } from "../types/product";
 
 interface ProductCardProps {
   product: Product;
+  isSkeleton?: boolean;
 }
 
 function formatPrice(price: number) {
   return new Intl.NumberFormat("fa-IR").format(price);
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({
+  product,
+  isSkeleton = false,
+}: ProductCardProps) {
   const discountedPrice =
-    product.discountPercent > 0
-      ? product.price - (product.price * product.discountPercent) / 100
-      : product.price;
+    product.price - (product.price * product.discountPercentage) / 100;
 
   return (
-    <article className="group overflow-hidden rounded-lg border border-gray-200 bg-white">
-      <div className="relative aspect-square overflow-hidden bg-gray-100">
-        <Image
-          src={product.imageUrl}
-          alt={product.name}
-          fill
-          className="object-cover transition-opacity duration-300 group-hover:opacity-0"
-          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-        />
+    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
+      <div className="relative aspect-square shrink-0 overflow-hidden bg-gray-100">
+        {!isSkeleton && (
+          <>
+            <Image
+              src={product.thumbnail}
+              alt={product.title}
+              fill
+              className="object-cover transition-opacity duration-300 group-hover:opacity-0"
+              sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+            />
 
-        <Image
-          src={product.hoverImageUrl}
-          alt=""
-          fill
-          className="object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
-        />
+            {product.images[1] && (
+              <Image
+                src={product.images[1]}
+                alt=""
+                fill
+                className="object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+              />
+            )}
+          </>
+        )}
 
-        {product.discountPercent > 0 && (
+        {product.discountPercentage > 0 && !isSkeleton && (
           <span className="absolute right-3 top-3 rounded-full bg-black px-3 py-1 text-xs text-white">
-            {product.discountPercent}٪ تخفیف
+            {Math.round(product.discountPercentage)}٪ تخفیف
           </span>
         )}
       </div>
 
-      <div className="p-4">
-        <h3 className="line-clamp-2 min-h-12 text-sm font-medium">
-          {product.name}
+      <div className="flex flex-1 flex-col p-4">
+        <div className="mb-2 min-h-5 text-xs text-gray-400">
+          {product.category}
+        </div>
+
+        <h3 className="line-clamp-2 min-h-12 text-sm font-semibold">
+          {product.title}
         </h3>
 
-        <div className="mt-4">
-          {product.discountPercent > 0 && (
+        <div className="mt-4 min-h-14">
+          {product.discountPercentage > 0 && !isSkeleton && (
             <div className="text-sm text-gray-400 line-through">
               {formatPrice(product.price)} تومان
             </div>
           )}
 
-          <div className="mt-1 font-semibold">
-            {formatPrice(discountedPrice)} تومان
+          <div className="mt-1 text-lg font-bold">
+            {!isSkeleton && `${formatPrice(discountedPrice)} تومان`}
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-2">
-          {product.colors.map((color) => (
-            <span
-              key={color.id}
-              className="h-4 w-4 rounded-full border border-gray-300"
-              style={{
-                backgroundColor: color.hex,
-              }}
-            />
-          ))}
+        <div className="mt-4 flex min-h-5 items-center justify-between text-sm text-gray-500">
+          <span>{!isSkeleton && `⭐ ${product.rating}`}</span>
+
+          <span>{!isSkeleton && product.brand}</span>
         </div>
+
+        <button
+          type="button"
+          className="mt-auto w-full rounded-lg bg-black px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-800"
+        >
+          {!isSkeleton && "افزودن به سبد خرید"}
+        </button>
       </div>
     </article>
   );

@@ -1,77 +1,80 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
 import Header from "@/components/header/Header";
 import FilterSidebar from "@/components/filters/FilterSidebar";
+import Pagination from "@/components/products/Pagination";
 import ProductList from "@/components/products/ProductList";
+import { getCategories, getProducts } from "@/components/services/product";
+import { Category, Product } from "@/components/types/product";
 import {
-  Category,
-  Product,
-  ProductColor,
-  ProductType,
-} from "@/components/types/product";
-import {
-  getCategories,
-  getColors,
-  getProducts,
-  getProductTypes,
-} from "@/components/services/product";
+  skeletonCategories,
+  skeletonProducts,
+} from "@/components/configs/skeleton";
+
+const PRODUCTS_PER_PAGE = 12;
 
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [types, setTypes] = useState<ProductType[]>([]);
-  const [colors, setColors] = useState<ProductColor[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-
-  const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
-
-  const [selectedTypes, setSelectedTypes] = useState<number[]>([]);
-
-  const [selectedColors, setSelectedColors] = useState<number[]>([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
+  const [isProductsLoading, setIsProductsLoading] = useState(true);
 
   useEffect(() => {
-    async function loadData() {
-      const [categoriesData, typesData, colorsData, productsData] =
-        await Promise.all([
-          getCategories(),
-          getProductTypes(),
-          getColors(),
-          getProducts(),
-        ]);
+    async function loadCategories() {
+      setIsCategoriesLoading(true);
 
-      setCategories(categoriesData);
-      setTypes(typesData);
-      setColors(colorsData);
-      setProducts(productsData);
+      try {
+        const categoriesData = await getCategories();
+        setCategories(categoriesData);
+      } finally {
+        setIsCategoriesLoading(false);
+      }
     }
 
-    loadData();
+    loadCategories();
   }, []);
 
-  function handleCategoryChange(id: number) {
+  useEffect(() => {
+    async function loadProducts() {
+      setIsProductsLoading(true);
+
+      try {
+        const skip = (currentPage - 1) * PRODUCTS_PER_PAGE;
+
+        const data = await getProducts(PRODUCTS_PER_PAGE, skip);
+
+        setProducts(data.products);
+        setTotalProducts(data.total);
+      } finally {
+        setIsProductsLoading(false);
+      }
+    }
+
+    loadProducts();
+  }, [currentPage]);
+
+  function handleCategoryChange(slug: string) {
     setSelectedCategories((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
+      current.includes(slug)
+        ? current.filter((item) => item !== slug)
+        : [...current, slug],
     );
+
+    setCurrentPage(1);
   }
 
-  function handleTypeChange(id: number) {
-    setSelectedTypes((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
-    );
-  }
+  const filteredProducts =
+    selectedCategories.length === 0
+      ? products
+      : products.filter((product) =>
+          selectedCategories.includes(product.category),
+        );
 
-  function handleColorChange(id: number) {
-    setSelectedColors((current) =>
-      current.includes(id)
-        ? current.filter((item) => item !== id)
-        : [...current, id],
-    );
-  }
+  const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
 
   return (
     <>
@@ -86,19 +89,25 @@ export default function Home() {
 
         <div className="flex flex-col gap-8 lg:flex-row">
           <FilterSidebar
-            categories={categories}
-            types={types}
-            colors={colors}
+            categories={isCategoriesLoading ? skeletonCategories : categories}
             selectedCategories={selectedCategories}
-            selectedTypes={selectedTypes}
-            selectedColors={selectedColors}
             onCategoryChange={handleCategoryChange}
-            onTypeChange={handleTypeChange}
-            onColorChange={handleColorChange}
+            isSkeleton={isCategoriesLoading}
           />
 
           <section className="min-w-0 flex-1">
-            <ProductList products={products} />
+            <ProductList
+              products={isProductsLoading ? skeletonProducts : filteredProducts}
+              isSkeleton={isProductsLoading}
+            />
+
+            {!isProductsLoading && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            )}
           </section>
         </div>
       </main>

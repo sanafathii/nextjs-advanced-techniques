@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "course-assets.s3.ir-tbz-sh1.arvanstorage.ir",
+        hostname: "cdn.dummyjson.com",
       },
     ],
   },
